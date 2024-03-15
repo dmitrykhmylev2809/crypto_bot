@@ -22,6 +22,7 @@ public class AppConfig {
 
     @Bean
     public String checkInterval() {
+
         return "PT" + checkDelayValue + checkDelayUnit.charAt(0);
     }
 

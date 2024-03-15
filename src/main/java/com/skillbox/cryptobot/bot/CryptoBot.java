@@ -5,12 +5,12 @@ import com.skillbox.cryptobot.repository.SubscriptionRepository;
 import com.skillbox.cryptobot.service.CryptoCurrencyService;
 import com.skillbox.cryptobot.utils.TextUtil;
 import lombok.extern.slf4j.Slf4j;
+
+import net.javacrumbs.shedlock.core.SchedulerLock;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.web.WebProperties;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.config.FixedRateTask;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
 import org.telegram.telegrambots.extensions.bots.commandbot.commands.IBotCommand;
@@ -23,9 +23,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+
 
 
 @Service
@@ -71,6 +69,7 @@ public class CryptoBot extends TelegramLongPollingCommandBot {
 
 
     @Scheduled(fixedDelayString = "#{@checkInterval}")
+    @SchedulerLock(name = "checkBitcoinPriceAndSendNotificationLock", lockAtMostFor = "PT1M")
     private void checkBitcoinPriceAndSendNotification() {
 
         log.info("Проверка текущей стоимости биткойна - {} ", LocalDateTime.now());
@@ -86,6 +85,7 @@ public class CryptoBot extends TelegramLongPollingCommandBot {
     }
 
     @Scheduled(fixedDelayString = "#{@notifyInterval}")
+    @SchedulerLock(name = "sendNotificationsLock", lockAtMostFor = "PT1M")
     private synchronized void sendNotifications() {
         for (Subscription userSubscription : subscriptions) {
             sendNotification(userSubscription.getId());

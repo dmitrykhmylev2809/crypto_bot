@@ -36,13 +36,19 @@ dependencies {
 	implementation "ch.qos.logback:logback-classic:$logbackVersion"
 	implementation "ch.qos.logback:logback-core:$logbackVersion"
 
-	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: jaxbApiVersion
-	implementation group: 'org.postgresql', name: 'postgresql', version: postgresqlDriverVersion
-	implementation group: 'org.springframework', name: 'spring-orm', version: springOrmVersion
+	implementation 'javax.xml.bind:jaxb-api:jaxbApiVersion'
+	implementation 'org.postgresql:postgresql:postgresqlDriverVersion'
+	implementation 'org.springframework:spring-orm:springOrmVersion'
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
 
+	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.10.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.10.0'
+
+	implementation 'com.h2database:h2:2.1.214'
+
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
 
 }
 
