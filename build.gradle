@@ -8,9 +8,9 @@ plugins {
 
 ext {
 	telegrambotsVersion = '6.8.0'
-	logbackVersion = '1.4.8'
+	logbackVersion = '1.4.12'
 	jaxbApiVersion = '2.3.1'
-	postgresqlDriverVersion = '42.6.0'
+	postgresqlDriverVersion = '42.7.2'
 	springOrmVersion = '6.0.13'
 }
 
@@ -36,14 +36,18 @@ dependencies {
 	implementation "ch.qos.logback:logback-classic:$logbackVersion"
 	implementation "ch.qos.logback:logback-core:$logbackVersion"
 
-	implementation 'javax.xml.bind:jaxb-api:jaxbApiVersion'
-	implementation 'org.postgresql:postgresql:postgresqlDriverVersion'
-	implementation 'org.springframework:spring-orm:springOrmVersion'
+	implementation group: 'javax.xml.bind', name: 'jaxb-api', version: jaxbApiVersion
+	implementation group: 'org.postgresql', name: 'postgresql', version: postgresqlDriverVersion
+
+	implementation group: 'org.springframework', name: 'spring-orm', version: springOrmVersion
+
+	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.11.0'
+	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.11.0'
+
+	implementation group: 'net.javacrumbs.shedlock', name: 'shedlock-provider-jdbc', version: '5.11.0'
+
 
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-
-	implementation 'net.javacrumbs.shedlock:shedlock-spring:5.10.0'
-	implementation 'net.javacrumbs.shedlock:shedlock-provider-jdbc-template:5.10.0'
 
 	implementation 'com.h2database:h2:2.1.214'
 

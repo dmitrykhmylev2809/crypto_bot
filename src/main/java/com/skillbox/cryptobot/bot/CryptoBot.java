@@ -6,10 +6,10 @@ import com.skillbox.cryptobot.service.CryptoCurrencyService;
 import com.skillbox.cryptobot.utils.TextUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import net.javacrumbs.shedlock.core.SchedulerLock;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import net.javacrumbs.shedlock.core.LockAssert;
+import net.javacrumbs.shedlock.spring.annotation.SchedulerLock;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.telegram.telegrambots.extensions.bots.commandbot.TelegramLongPollingCommandBot;
@@ -29,17 +29,13 @@ import java.util.List;
 @Service
 @Slf4j
 
-public class CryptoBot extends TelegramLongPollingCommandBot {
+public class CryptoBot extends TelegramLongPollingCommandBot implements BotOperations {
 
     private final String botUsername;
     private final CryptoCurrencyService service;
-    private SubscriptionRepository repository;
+    private final SubscriptionRepository repository;
     private static List<Subscription> subscriptions = new ArrayList<>();
     private static BigDecimal bitcoinPrice = null;
-    @Autowired
-    private String checkInterval;
-    @Autowired
-    private String notifyInterval;
 
 
     public CryptoBot(
@@ -65,28 +61,38 @@ public class CryptoBot extends TelegramLongPollingCommandBot {
     @Override
     public void processNonCommandUpdate(Update update) {
         checkBitcoinPriceAndSendNotification();
+        sendNotifications();
     }
 
 
+    @Async("getPriceExecutor")
     @Scheduled(fixedDelayString = "#{@checkInterval}")
-    @SchedulerLock(name = "checkBitcoinPriceAndSendNotificationLock", lockAtMostFor = "PT1M")
-    private void checkBitcoinPriceAndSendNotification() {
-
-        log.info("Проверка текущей стоимости биткойна - {} ", LocalDateTime.now());
+    @SchedulerLock(name = "checkBitcoinPriceAndSendNotificationLock", lockAtLeastFor = "PT10S", lockAtMostFor = "#{@checkInterval}" )
+    public void checkBitcoinPriceAndSendNotification() {
+        LockAssert.assertLocked();
 
         try {
             bitcoinPrice = new BigDecimal(service.getBitcoinPrice());
         } catch (IOException e) {
             log.error("Ошибка возникла /get_price методе", e);
         }
-        subscriptions = repository.findBySubscriptionPriceGreaterThan(bitcoinPrice);
 
-        sendNotifications();
+        log.info("Текущая стоимость биткойна - {} (время  - {},  в потоке - {})", bitcoinPrice, LocalDateTime.now(), Thread.currentThread().getName());
+
     }
 
+    @Async("notificationExecutor")
     @Scheduled(fixedDelayString = "#{@notifyInterval}")
-    @SchedulerLock(name = "sendNotificationsLock", lockAtMostFor = "PT1M")
-    private synchronized void sendNotifications() {
+    @SchedulerLock(name = "sendNotificationsLock", lockAtLeastFor = "#{@checkInterval}", lockAtMostFor = "#{@notifyInterval}")
+     public void sendNotifications() {
+
+         LockAssert.assertLocked();
+
+        subscriptions = repository.findBySubscriptionPriceGreaterThan(bitcoinPrice);
+
+
+        log.info("Рассылка уведомлений - {} в потоке {}", LocalDateTime.now(), Thread.currentThread().getName());
+
         for (Subscription userSubscription : subscriptions) {
             sendNotification(userSubscription.getId());
         }
@@ -94,7 +100,7 @@ public class CryptoBot extends TelegramLongPollingCommandBot {
     }
 
     private void sendNotification(Long userSubscription) {
-        log.info("Рассылка уведомлений - {}", LocalDateTime.now());
+
         SendMessage answer = new SendMessage();
         answer.setChatId(userSubscription);
         try {
@@ -105,4 +111,6 @@ public class CryptoBot extends TelegramLongPollingCommandBot {
             log.error("Ошибка при отправке уведомления", e);
         }
     }
+
+
 }

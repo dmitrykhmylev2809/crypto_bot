@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.concurrent.Executor;
+import java.util.concurrent.Executors;
+
 @Configuration
 public class AppConfig {
 
@@ -22,13 +25,22 @@ public class AppConfig {
 
     @Bean
     public String checkInterval() {
-
         return "PT" + checkDelayValue + checkDelayUnit.charAt(0);
     }
 
     @Bean
     public String notifyInterval() {
         return "PT" + delayValue + delayUnit.charAt(0);
+    }
+
+    @Bean
+    public Executor getPriceExecutor() {
+        return Executors.newCachedThreadPool();
+    }
+
+    @Bean
+    public Executor notificationExecutor() {
+        return Executors.newCachedThreadPool();
     }
 
 }
