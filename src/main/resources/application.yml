@@ -2,10 +2,8 @@ telegram:
   bot:
 #    не вписывайте данные, так как можете отправить в публичный репозиторий
 #    используйте переменные среды для установки значений
-    username: bitcoin_redyarsk_bot
-#    ${BOT_NAME}
-    token: 6441158073:AAE7vG-M1CqXUF_uZlxqE1nBt_DPzAKV7A0
-#    ${BOT_TOKEN}
+    username: ${BOT_NAME}
+    token: ${BOT_TOKEN}
     check:
       value: 01
       unit: MINUTES
